@@ -94,10 +94,15 @@ impl<T: Read + Write> RCONClient<T> {
         self.socket.write_all(&pkt)
     }
 
-    pub fn get_response(&mut self) -> Result<String, RCONError> {
+    pub fn get_packet(&mut self) -> Result<Packet, RCONError> {
         let mut buf = [0u8; MAX_PACKET_SIZE];
         self.socket.read_exact(&mut buf)?;
         let pkt = Packet::try_from(&buf[..])?;
+        Ok(pkt)
+    }
+
+    pub fn get_response(&mut self) -> Result<String, RCONError> {
+        let pkt = self.get_packet()?;
         Ok(pkt.get_body())
     }
 }
@@ -114,6 +119,7 @@ mod tests {
         let stream = TcpStream::connect("127.0.0.1:27016")?;
         let mut client = RCONClient::new(stream);
         println!("{:?}", client.send_authentication("password".to_string()));
+        println!("{:?}", client.get_packet());
         println!("{:?}", client.send_command("list".to_string()));
 
         Ok(())
