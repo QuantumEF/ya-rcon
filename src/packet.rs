@@ -1,7 +1,6 @@
 use std::string::FromUtf8Error;
 
-const TWELVE: usize = 12;
-const TEN: usize = 10;
+const MIN_PACKET_SIZE: usize = 10;
 
 /// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
 #[derive(Debug, Clone, Copy, Default)]
@@ -76,9 +75,9 @@ pub struct Packet {
 }
 
 impl Packet {
-    pub fn new(pkt_type: PacketType, body: String) -> Packet {
-        let size = (body.len() + TEN).try_into().unwrap();
-        Packet::new_raw(pkt_type, body, size, 0)
+    pub fn new(pkt_type: PacketType, body: String, id: i32) -> Packet {
+        let size = (body.len() + MIN_PACKET_SIZE).try_into().unwrap();
+        Packet::new_raw(pkt_type, body, size, id)
     }
 
     pub fn new_raw(pkt_type: PacketType, body: String, size: i32, id: i32) -> Packet {
@@ -92,6 +91,10 @@ impl Packet {
 
     pub fn get_id(&self) -> i32 {
         self.id
+    }
+
+    pub fn get_body(&self) -> String {
+        self.body.clone()
     }
 }
 
@@ -109,8 +112,10 @@ impl From<FromUtf8Error> for PacketError {
 
 impl From<Packet> for Vec<u8> {
     fn from(val: Packet) -> Self {
-        let mut output_vec =
-            Vec::with_capacity(usize::try_from(val.size).expect("Invalid packet size") + TWELVE);
+        // MIN_PACKET_SIZE + 2 for the 2 null bytes at the end.
+        let mut output_vec = Vec::with_capacity(
+            usize::try_from(val.size).expect("Invalid packet size") + MIN_PACKET_SIZE + 2,
+        );
         output_vec.extend(val.size.to_le_bytes());
         output_vec.extend(val.id.to_le_bytes());
         output_vec.extend(i32::from(val.pkt_type).to_be_bytes());
@@ -134,5 +139,20 @@ impl TryFrom<&[u8]> for Packet {
         let body = String::from_utf8(value[12..body_end].to_vec())?;
 
         Ok(Packet::new_raw(pkt_type, body, size, id))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_packet_size() {
+        let body = String::from("test");
+        let expected_length = body.len();
+        let pkt = Packet::new(PacketType::Auth, body, 1);
+        assert_eq!(
+            pkt.size,
+            i32::try_from(expected_length + MIN_PACKET_SIZE).unwrap()
+        );
     }
 }
