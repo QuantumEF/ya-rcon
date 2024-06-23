@@ -119,9 +119,8 @@ mod tests {
         let stream = TcpStream::connect("127.0.0.1:27016")?;
         let mut client = RCONClient::new(stream);
         println!("{:?}", client.send_authentication("password".to_string()));
-        println!("{:?}", client.get_packet());
         println!("{:?}", client.send_command("list".to_string()));
-
+        println!("{:?}", client.get_packet());
         Ok(())
     }
 }

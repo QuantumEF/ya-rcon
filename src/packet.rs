@@ -109,7 +109,7 @@ impl From<Packet> for Vec<u8> {
         );
         output_vec.extend(val.size.to_le_bytes());
         output_vec.extend(val.id.to_le_bytes());
-        output_vec.extend(i32::from(val.pkt_type).to_be_bytes());
+        output_vec.extend(i32::from(val.pkt_type).to_le_bytes());
         output_vec.extend(val.body.as_bytes());
         output_vec.extend([0u8, 0]);
         output_vec
@@ -145,5 +145,17 @@ mod tests {
             pkt.size,
             i32::try_from(expected_length + MIN_PACKET_SIZE).unwrap()
         );
+    }
+
+    #[test]
+    fn test_auth_packet() {
+        let pkt = Vec::from(Packet::new(PacketType::Auth, String::from("password"), 0));
+        // Expected output generated from packet capture using https://github.com/gorcon/rcon-cli
+        let expected_bytes = [
+            0x12u8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x70, 0x61,
+            0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x00, 0x00,
+        ];
+
+        assert_eq!(&expected_bytes[..], &pkt[..]);
     }
 }
