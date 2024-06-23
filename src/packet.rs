@@ -10,32 +10,29 @@ pub enum PacketType {
     ExecCommand,
     AuthResponse,
     Auth,
-    /// Since both (insert items) are the value of 2, it depends on context what it is.
-    Unknown,
+    /// Since both `ExecCommand` and `AuthResponse` are the value of 2, it depends on context what it is.
+    ExecOrAuthResp,
+    Raw(i32),
 }
 
-/// TODO: use better error type
-impl TryFrom<u8> for PacketType {
-    type Error = PacketError;
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+impl From<u8> for PacketType {
+    fn from(value: u8) -> Self {
         match value {
-            0 => Ok(PacketType::ResponseValue),
-            2 => Ok(PacketType::Unknown),
-            3 => Ok(PacketType::Auth),
-            _ => Err(PacketError::ParseError),
+            0 => PacketType::ResponseValue,
+            2 => PacketType::ExecOrAuthResp,
+            3 => PacketType::Auth,
+            x => PacketType::Raw(i32::from(x)),
         }
     }
 }
 
-/// TODO: use better error type
-impl TryFrom<i32> for PacketType {
-    type Error = PacketError;
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
+impl From<i32> for PacketType {
+    fn from(value: i32) -> Self {
         match value {
-            0 => Ok(PacketType::ResponseValue),
-            2 => Ok(PacketType::Unknown),
-            3 => Ok(PacketType::Auth),
-            _ => Err(PacketError::ParseError),
+            0 => PacketType::ResponseValue,
+            2 => PacketType::ExecOrAuthResp,
+            3 => PacketType::Auth,
+            x => PacketType::Raw(x),
         }
     }
 }
@@ -47,19 +44,8 @@ impl From<PacketType> for i32 {
             PacketType::AuthResponse => 2,
             PacketType::ExecCommand => 2,
             PacketType::ResponseValue => 0,
-            PacketType::Unknown => 2,
-        }
-    }
-}
-
-impl From<PacketType> for u8 {
-    fn from(value: PacketType) -> Self {
-        match value {
-            PacketType::Auth => 3,
-            PacketType::AuthResponse => 2,
-            PacketType::ExecCommand => 2,
-            PacketType::ResponseValue => 0,
-            PacketType::Unknown => 2,
+            PacketType::ExecOrAuthResp => 2,
+            PacketType::Raw(x) => x,
         }
     }
 }
@@ -131,11 +117,11 @@ impl TryFrom<&[u8]> for Packet {
         let body_end = value.len() - 2;
         let size = i32::from_le_bytes(value[0..3].try_into().expect("slice with incorrect length"));
         let id = i32::from_le_bytes(value[4..7].try_into().expect("slice with incorrect length"));
-        let pkt_type = PacketType::try_from(i32::from_le_bytes(
+        let pkt_type = PacketType::from(i32::from_le_bytes(
             value[8..11]
                 .try_into()
                 .expect("slice with incorrect length"),
-        ))?;
+        ));
         let body = String::from_utf8(value[12..body_end].to_vec())?;
 
         Ok(Packet::new_raw(pkt_type, body, size, id))
