@@ -53,29 +53,36 @@ impl<T: Read + Write> RCONClient<T> {
         }
     }
 
-    fn send_authentication(&mut self, password: String) -> Result<(), std::io::Error> {
-        let packet = Vec::from(Packet::new(
-            PacketType::Auth,
-            password,
-            self.incremental_id.get(),
-        ));
-        self.socket.write_all(&packet)
+    fn send_authentication(&mut self, password: String) -> Result<i32, std::io::Error> {
+        let used_id = self.incremental_id.get();
+        let packet = Vec::from(Packet::new(PacketType::Auth, password, used_id));
+        self.socket.write_all(&packet)?;
+        Ok(used_id)
     }
 
-    fn wait_authentication(&mut self) -> Result<(), RCONError> {
-        let mut buf = [0u8; 10];
+    fn wait_authentication(&mut self, expected_id: i32) -> Result<(), RCONError> {
+        let mut buf = [0u8; MAX_PACKET_SIZE];
         let _ = self.socket.read(&mut buf)?;
         // Question about buf[..]
         let packet = Packet::try_from(&buf[..])?;
-        if packet.get_id() == -1 {
-            return Err(RCONError::AuthenticationFailed);
+
+        if packet.get_type() != PacketType::AuthResponse {
+            return Err(RCONError::PacketError(PacketError::UnexpectedType));
         }
-        Ok(())
+
+        let packet_id = packet.get_id();
+        if packet_id == -1 {
+            Err(RCONError::AuthenticationFailed)
+        } else if expected_id == packet_id {
+            Ok(())
+        } else {
+            Err(RCONError::PacketError(PacketError::UnexpectedID))
+        }
     }
 
     pub fn authenticate(&mut self, password: String) -> Result<(), RCONError> {
-        self.send_authentication(password)?;
-        self.wait_authentication()
+        let used_id = self.send_authentication(password)?;
+        self.wait_authentication(used_id)
     }
 
     pub fn send_command(&mut self, cmd: String) -> Result<(), Error> {

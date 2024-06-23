@@ -3,9 +3,8 @@ use std::string::FromUtf8Error;
 const MIN_PACKET_SIZE: usize = 10;
 
 /// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
-    #[default]
     ResponseValue,
     ExecCommand,
     AuthResponse,
@@ -50,7 +49,7 @@ impl From<PacketType> for i32 {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Packet {
     ///The packet size field is a 32-bit little endian integer, representing the length of the request in bytes. Note that the packet size field itself is not included when determining the size of the packet, so the value of this field is always 4 less than the packet's actual length. The minimum possible value for packet size is 10:
     size: i32,
@@ -82,12 +81,18 @@ impl Packet {
     pub fn get_body(&self) -> String {
         self.body.clone()
     }
+
+    pub fn get_type(&self) -> PacketType {
+        self.pkt_type
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum PacketError {
     ParseError,
     InvalidPacketBody,
+    UnexpectedID,
+    UnexpectedType,
 }
 
 impl From<FromUtf8Error> for PacketError {
