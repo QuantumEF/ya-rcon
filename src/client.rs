@@ -1,9 +1,6 @@
 use std::io::{Error, Read, Write};
 
-use crate::packet::{Packet, PacketError, PacketType, MIN_PACKET_SIZE};
-
-// TODO: Set to actual value.
-const MAX_PACKET_SIZE: usize = 4096 + 64;
+use crate::packet::{Packet, PacketError, PacketType, MAX_PACKET_SIZE};
 
 // Question: Is this a bad way to convert errors?
 #[derive(Debug)]

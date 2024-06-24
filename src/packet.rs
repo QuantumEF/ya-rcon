@@ -1,6 +1,8 @@
 use std::string::FromUtf8Error;
 
 pub const MIN_PACKET_SIZE: usize = 10;
+/// The max packet size is 4096 not including the size field of 4 bytes.
+pub const MAX_PACKET_SIZE: usize = 4096 + 4;
 
 /// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
