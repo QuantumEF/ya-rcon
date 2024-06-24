@@ -52,18 +52,43 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         .expect("Bit masking did not work")
     }
 
-    fn send_authentication(&mut self, password: String) -> Result<i32, std::io::Error> {
-        let used_id = self.next_id();
-        let packet = Vec::from(Packet::new(PacketType::Auth, password, used_id));
-        self.socket.write_all(&packet)?;
-        Ok(used_id)
+    fn send_packet(&mut self, pkt_type: PacketType, body: String) -> Result<i32, Error> {
+        let id = self.next_id();
+        let pkt = Vec::from(Packet::new(pkt_type, body, id));
+        self.socket.write_all(&pkt)?;
+        Ok(id)
     }
 
-    fn wait_authentication(&mut self, expected_id: i32) -> Result<(), RCONError> {
+    fn recv_packet_unchecked(&mut self) -> Result<Packet, Error> {
         let mut buf = [0u8; MAX_PACKET_SIZE];
         let packet_len = self.socket.read(&mut buf)?;
         // Question about buf[..]
         let packet = Packet::try_from(&buf[..packet_len])?;
+        Ok(packet)
+    }
+
+    fn recv_packet(
+        &mut self,
+        expected_type: PacketType,
+        expected_id: i32,
+    ) -> Result<String, Error> {
+        let packet = self.recv_packet_unchecked()?;
+        if packet.get_id() != expected_id {
+            Err(PacketError::UnexpectedID)?;
+        }
+        if packet.get_type() != expected_type {
+            Err(PacketError::UnexpectedType)?;
+        }
+        Ok(packet.get_body())
+    }
+
+    pub fn authenticate(&mut self, password: String) -> Result<(), RCONError> {
+        let used_id = self.send_packet(PacketType::Auth, password)?;
+        self.wait_authentication(used_id)
+    }
+
+    fn wait_authentication(&mut self, expected_id: i32) -> Result<(), RCONError> {
+        let packet = self.recv_packet_unchecked()?;
 
         if packet.get_type() != PacketType::AuthResponse {
             return Err(RCONError::PacketError(PacketError::UnexpectedType));
@@ -79,26 +104,9 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         }
     }
 
-    pub fn authenticate(&mut self, password: String) -> Result<(), RCONError> {
-        let used_id = self.send_authentication(password)?;
-        self.wait_authentication(used_id)
-    }
-
-    pub fn send_command(&mut self, cmd: String) -> Result<(), Error> {
-        let pkt = Vec::from(Packet::new(PacketType::ExecCommand, cmd, self.next_id()));
-        self.socket.write_all(&pkt)
-    }
-
-    pub fn get_packet(&mut self) -> Result<Packet, RCONError> {
-        let mut buf = [0u8; MAX_PACKET_SIZE];
-        let packet_len = self.socket.read(&mut buf)?;
-        let pkt = Packet::try_from(&buf[..packet_len])?;
-        Ok(pkt)
-    }
-
-    pub fn get_response(&mut self) -> Result<String, RCONError> {
-        let pkt = self.get_packet()?;
-        Ok(pkt.get_body())
+    pub fn send_command(&mut self, cmd: String) -> Result<String, Error> {
+        let used_id = self.send_packet(PacketType::ExecCommand, cmd)?;
+        self.recv_packet(PacketType::ResponseValue, used_id)
     }
 }
 
@@ -106,19 +114,16 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 mod tests {
     use std::net::TcpStream;
 
-    use super::RCONClient;
+    use super::{RCONClient, RCONError};
 
     #[test]
     #[ignore = "Requires RCON Server"]
-    fn basic_rcon_client_test() -> std::io::Result<()> {
+    fn basic_rcon_client_test() -> Result<(), RCONError> {
         // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
         // Open to alternate suggestions.
-        let (address, password) = include!("../rcon_server.txt");
+        let (address, password) = ("a", "b");
         let stream = TcpStream::connect(address)?;
         let mut client = RCONClient::new(stream, 0..);
-        let id = client.send_authentication(password.to_string())?;
-        client.wait_authentication(id)?;
-
-        Ok(())
+        client.authenticate(password.to_string())
     }
 }

@@ -1,4 +1,4 @@
-use std::string::FromUtf8Error;
+use std::{io::Error, string::FromUtf8Error};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PacketError {
@@ -11,5 +11,11 @@ pub enum PacketError {
 impl From<FromUtf8Error> for PacketError {
     fn from(_: FromUtf8Error) -> Self {
         PacketError::InvalidPacketBody
+    }
+}
+
+impl From<PacketError> for Error {
+    fn from(value: PacketError) -> Self {
+        Error::other(format!("{:?}", value))
     }
 }
