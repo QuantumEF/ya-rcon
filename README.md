@@ -62,10 +62,11 @@ Pull requests are welcome. You should open an issue first to discuss what you wo
 [MIT](https://choosealicense.com/licenses/mit/)
 
 # Another TODO (Mainly for myself since it is more haphazard and specific to communicating with myself.)
+- Need revamp for general error handling.
+- HashMap for handling ["fragmented" packets](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses)? 
 - tokio and async_net features.
 - creates.io and documentation
     - Creation of docker container to test rcon with specific game (and document how to so other can do so.)
-- HashMap for handling ["fragmented" packets](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses)? 
 - organization / investigation to determine game specific features for higher level abstractions.
     - contribution guide
 - open isue for "std" AsyncWrite/Read trait in case it ends up in the standard library.
