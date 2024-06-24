@@ -61,9 +61,9 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 
     fn wait_authentication(&mut self, expected_id: i32) -> Result<(), RCONError> {
         let mut buf = [0u8; MAX_PACKET_SIZE];
-        let _ = self.socket.read(&mut buf)?;
+        let packet_len = self.socket.read(&mut buf)?;
         // Question about buf[..]
-        let packet = Packet::try_from(&buf[..])?;
+        let packet = Packet::try_from(&buf[..packet_len])?;
 
         if packet.get_type() != PacketType::ExecOrAuthResp {
             return Err(RCONError::PacketError(PacketError::UnexpectedType));
@@ -91,8 +91,8 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 
     pub fn get_packet(&mut self) -> Result<Packet, RCONError> {
         let mut buf = [0u8; MAX_PACKET_SIZE];
-        self.socket.read_exact(&mut buf)?;
-        let pkt = Packet::try_from(&buf[..])?;
+        let packet_len = self.socket.read(&mut buf)?;
+        let pkt = Packet::try_from(&buf[..packet_len])?;
         Ok(pkt)
     }
 
