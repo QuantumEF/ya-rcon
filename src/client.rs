@@ -112,18 +112,22 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 
 #[cfg(test)]
 mod tests {
-    use std::net::TcpStream;
+    use std::{io::Error, net::TcpStream};
 
-    use super::{RCONClient, RCONError};
+    use super::*;
 
     #[test]
     #[ignore = "Requires RCON Server"]
-    fn basic_rcon_client_test() -> Result<(), RCONError> {
+    fn basic_rcon_client_test() -> Result<(), Error> {
         // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
         // Open to alternate suggestions.
         let (address, password) = include!("../rcon_server.txt");
         let stream = TcpStream::connect(address)?;
         let mut client = RCONClient::new(stream, 0..);
-        client.authenticate(password.to_string())
+        client.authenticate(password.to_string())?;
+
+        let reply = client.send_command("help".to_string())?;
+        println!("RCON Server Reply: {reply}");
+        Ok(())
     }
 }
