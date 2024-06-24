@@ -205,4 +205,12 @@ mod tests {
 
         assert_eq!(expected_packet, pkt);
     }
+
+    #[test]
+    fn packet_type_equality_tests() {
+        assert_eq!(PacketType::AuthResponse, PacketType::ExecCommand);
+        assert_eq!(PacketType::AuthResponse, PacketType::ExecOrAuthResp);
+        assert_eq!(PacketType::ExecCommand, PacketType::ExecOrAuthResp);
+        assert_eq!(PacketType::Auth, PacketType::Raw(3));
+    }
 }
