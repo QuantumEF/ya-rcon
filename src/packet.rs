@@ -5,7 +5,7 @@ pub const MIN_PACKET_SIZE: usize = 10;
 pub const MAX_PACKET_SIZE: usize = 4096 + 4;
 
 /// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub enum PacketType {
     ResponseValue,
     ExecCommand,
@@ -38,6 +38,25 @@ impl From<i32> for PacketType {
     }
 }
 
+impl From<&i32> for PacketType {
+    fn from(value: &i32) -> Self {
+        match value {
+            0 => PacketType::ResponseValue,
+            2 => PacketType::ExecOrAuthResp,
+            3 => PacketType::Auth,
+            x => PacketType::Raw(*x),
+        }
+    }
+}
+
+impl PartialEq for PacketType {
+    fn eq(&self, other: &Self) -> bool {
+        i32::from(self) == i32::from(other)
+    }
+}
+
+impl Eq for PacketType {}
+
 impl From<PacketType> for i32 {
     fn from(value: PacketType) -> Self {
         match value {
@@ -47,6 +66,19 @@ impl From<PacketType> for i32 {
             PacketType::ResponseValue => 0,
             PacketType::ExecOrAuthResp => 2,
             PacketType::Raw(x) => x,
+        }
+    }
+}
+
+impl From<&PacketType> for i32 {
+    fn from(value: &PacketType) -> Self {
+        match value {
+            PacketType::Auth => 3,
+            PacketType::AuthResponse => 2,
+            PacketType::ExecCommand => 2,
+            PacketType::ResponseValue => 0,
+            PacketType::ExecOrAuthResp => 2,
+            PacketType::Raw(x) => *x,
         }
     }
 }

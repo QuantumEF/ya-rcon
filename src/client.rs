@@ -65,7 +65,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         // Question about buf[..]
         let packet = Packet::try_from(&buf[..packet_len])?;
 
-        if packet.get_type() != PacketType::ExecOrAuthResp {
+        if packet.get_type() != PacketType::AuthResponse {
             return Err(RCONError::PacketError(PacketError::UnexpectedType));
         }
 
