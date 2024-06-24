@@ -26,35 +26,31 @@ impl From<PacketError> for RCONError {
 }
 
 #[derive(Debug)]
-struct IncrementingID(i32);
-impl IncrementingID {
-    fn new() -> IncrementingID {
-        IncrementingID(1)
-    }
-
-    fn get(&mut self) -> i32 {
-        let id = self.0;
-        self.0 += 1;
-        id
-    }
-}
-
-#[derive(Debug)]
-pub struct RCONClient<T: Read + Write> {
+pub struct RCONClient<T: Read + Write, I: Iterator<Item = u32>> {
     socket: T,
-    incremental_id: IncrementingID,
+    incremental_id: I,
 }
 
-impl<T: Read + Write> RCONClient<T> {
-    pub fn new(socket: T) -> RCONClient<T> {
+impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
+    pub fn new(socket: T, id_generator: I) -> RCONClient<T, I> {
         RCONClient {
             socket,
-            incremental_id: IncrementingID::new(),
+            incremental_id: id_generator,
         }
     }
 
+    fn next_id(&mut self) -> i32 {
+        i32::try_from(
+            self.incremental_id
+                .next()
+                .expect("Iterator should have been infinate, how should I handle?")
+                & 0xEFFFFFFF,
+        )
+        .expect("Bit masking did not work")
+    }
+
     fn send_authentication(&mut self, password: String) -> Result<i32, std::io::Error> {
-        let used_id = self.incremental_id.get();
+        let used_id = self.next_id();
         let packet = Vec::from(Packet::new(PacketType::Auth, password, used_id));
         self.socket.write_all(&packet)?;
         Ok(used_id)
@@ -86,11 +82,7 @@ impl<T: Read + Write> RCONClient<T> {
     }
 
     pub fn send_command(&mut self, cmd: String) -> Result<(), Error> {
-        let pkt = Vec::from(Packet::new(
-            PacketType::ExecCommand,
-            cmd,
-            self.incremental_id.get(),
-        ));
+        let pkt = Vec::from(Packet::new(PacketType::ExecCommand, cmd, self.next_id()));
         self.socket.write_all(&pkt)
     }
 
@@ -117,7 +109,7 @@ mod tests {
     #[ignore = "Requires RCON Server"]
     fn basic_rcon_client_test() -> std::io::Result<()> {
         let stream = TcpStream::connect("127.0.0.1:27016")?;
-        let mut client = RCONClient::new(stream);
+        let mut client = RCONClient::new(stream, 0..);
         println!("{:?}", client.send_authentication("password".to_string()));
         println!("{:?}", client.send_command("list".to_string()));
         println!("{:?}", client.get_packet());
