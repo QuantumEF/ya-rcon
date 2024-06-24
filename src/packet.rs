@@ -1,6 +1,6 @@
 use std::string::FromUtf8Error;
 
-const MIN_PACKET_SIZE: usize = 10;
+pub const MIN_PACKET_SIZE: usize = 10;
 
 /// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,7 +49,7 @@ impl From<PacketType> for i32 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Packet {
     ///The packet size field is a 32-bit little endian integer, representing the length of the request in bytes. Note that the packet size field itself is not included when determining the size of the packet, so the value of this field is always 4 less than the packet's actual length. The minimum possible value for packet size is 10:
     size: i32,
@@ -120,10 +120,10 @@ impl TryFrom<&[u8]> for Packet {
     type Error = PacketError;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let body_end = value.len() - 2;
-        let size = i32::from_le_bytes(value[0..3].try_into().expect("slice with incorrect length"));
-        let id = i32::from_le_bytes(value[4..7].try_into().expect("slice with incorrect length"));
+        let size = i32::from_le_bytes(value[0..4].try_into().expect("slice with incorrect length"));
+        let id = i32::from_le_bytes(value[4..8].try_into().expect("slice with incorrect length"));
         let pkt_type = PacketType::from(i32::from_le_bytes(
-            value[8..11]
+            value[8..12]
                 .try_into()
                 .expect("slice with incorrect length"),
         ));
@@ -157,5 +157,18 @@ mod tests {
         ];
 
         assert_eq!(&expected_bytes[..], &pkt[..]);
+    }
+
+    #[test]
+    fn test_parse_auth_reply() {
+        let raw_data = [
+            0x0au8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
+
+        let pkt = Packet::try_from(&raw_data[..]).unwrap();
+
+        let expected_packet = Packet::new_raw(PacketType::ExecOrAuthResp, String::new(), 10, 0);
+
+        assert_eq!(expected_packet, pkt);
     }
 }

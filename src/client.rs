@@ -1,6 +1,6 @@
 use std::io::{Error, Read, Write};
 
-use crate::packet::{Packet, PacketError, PacketType};
+use crate::packet::{Packet, PacketError, PacketType, MIN_PACKET_SIZE};
 
 // TODO: Set to actual value.
 const MAX_PACKET_SIZE: usize = 4096 + 64;
@@ -11,6 +11,12 @@ pub enum RCONError {
     SocketError(Error),
     PacketError(PacketError),
     AuthenticationFailed,
+}
+
+impl From<RCONError> for Error {
+    fn from(value: RCONError) -> Self {
+        Error::other(format!("{:?}", value))
+    }
 }
 
 impl From<Error> for RCONError {
@@ -62,7 +68,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         // Question about buf[..]
         let packet = Packet::try_from(&buf[..])?;
 
-        if packet.get_type() != PacketType::AuthResponse {
+        if packet.get_type() != PacketType::ExecOrAuthResp {
             return Err(RCONError::PacketError(PacketError::UnexpectedType));
         }
 
@@ -108,11 +114,14 @@ mod tests {
     #[test]
     #[ignore = "Requires RCON Server"]
     fn basic_rcon_client_test() -> std::io::Result<()> {
-        let stream = TcpStream::connect("127.0.0.1:27016")?;
+        // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
+        // Open to alternate suggestions.
+        let (address, password) = include!("../rcon_server.txt");
+        let stream = TcpStream::connect(address)?;
         let mut client = RCONClient::new(stream, 0..);
-        println!("{:?}", client.send_authentication("password".to_string()));
-        println!("{:?}", client.send_command("list".to_string()));
-        println!("{:?}", client.get_packet());
+        let id = client.send_authentication(password.to_string())?;
+        client.wait_authentication(id)?;
+
         Ok(())
     }
 }
