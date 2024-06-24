@@ -121,7 +121,7 @@ mod tests {
     fn basic_rcon_client_test() -> Result<(), RCONError> {
         // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
         // Open to alternate suggestions.
-        let (address, password) = ("a", "b");
+        let (address, password) = include!("../rcon_server.txt");
         let stream = TcpStream::connect(address)?;
         let mut client = RCONClient::new(stream, 0..);
         client.authenticate(password.to_string())
