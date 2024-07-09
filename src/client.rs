@@ -35,11 +35,17 @@ pub struct RCONClient<T: Read + Write, I: Iterator<Item = u32>> {
 }
 
 impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
-    pub fn new(socket: T, id_generator: I) -> RCONClient<T, I> {
-        RCONClient {
+    pub fn new(
+        socket: T,
+        id_generator: I,
+        password: String,
+    ) -> Result<RCONClient<T, I>, RCONError> {
+        let mut client = RCONClient {
             socket,
             incremental_id: id_generator,
-        }
+        };
+        client.authenticate(password)?;
+        Ok(client)
     }
 
     fn next_id(&mut self) -> i32 {
@@ -123,7 +129,7 @@ mod tests {
         // Open to alternate suggestions.
         let (address, password) = include!("../rcon_server.txt");
         let stream = TcpStream::connect(address)?;
-        let mut client = RCONClient::new(stream, 0..);
+        let mut client = RCONClient::new(stream, 0.., password.to_string())?;
         client.authenticate(password.to_string())?;
 
         let reply = client.send_command("help".to_string())?;
