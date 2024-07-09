@@ -5,7 +5,8 @@ This project is a rust implementation of the RCON protocol commonly used for gam
 ## Feature overview
 
 *   [x] Synchronous RCON API for sending commands and recieving a corresponding response.
-*   [ ] Async functionality provided by "tokio" and "async_net" features (and maybe others?)
+*   [ ] Async functionality switch with [maybe-async](https://docs.rs/maybe-async/latest/maybe_async/)
+    * [ ] Wrap "tokio" and "async_net" AsyncWrite Traits for crate one
 *   [ ] Contribution guide.
 *   [ ] Docker containers for being able to test compatibility with various games.
 *   [ ] Organization guide for addision of game specific abstractions gated with "features"
@@ -15,18 +16,10 @@ This project is a rust implementation of the RCON protocol commonly used for gam
 *   [What is this?](#what-is-this)
 *   [When should I use this?](#when-should-i-use-this)
 *   [Getting started](#getting-started)
-    *   [Requirements](#requirements)
-    *   [Install](#install)
     *   [Usage](#usage)
-*   [Here is where it's your turn](#here-is-where-its-your-turn)
-*   [Don't forget anything](#dont-forget-anything)
-    * [Used Technologies](#used-technologies)
-    * [Testing](#testing)
-    * [Logging](#logging)
+    *   [Project ideas](#project-ideas)
 *   [Contribute](#contribute)
 *   [License](#license)
-*   [Sources](#sources)
-*   [Conclusion](#conclusion)
 
 ## What is this?
 
@@ -50,7 +43,7 @@ Can't fill this section in quite yet until I do a bit more testing with the reci
 
 A cli project that has gated features to do auto complete.
 
-A web based console using leptos and axum (this is something I was originally planning on doing before running into those depencency issues.)
+A web based console using leptos and axum (this is something I have started and have something functional)
 
 If either of those interest you, feel free to open an issue to discuss and bounce some ideas around. 
 
