@@ -60,7 +60,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 
     fn send_packet(&mut self, pkt_type: PacketType, body: String) -> Result<i32, Error> {
         let id = self.next_id();
-        let pkt = Vec::from(Packet::new(pkt_type, body, id));
+        let pkt = Vec::from(Packet::new(pkt_type, body, id)?);
         self.socket.write_all(&pkt)?;
         Ok(id)
     }

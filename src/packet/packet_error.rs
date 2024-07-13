@@ -4,6 +4,7 @@ use std::{io::Error, string::FromUtf8Error};
 pub enum PacketError {
     ParseError,
     InvalidPacketBody,
+    InvalidPayloadLength,
     UnexpectedID,
     UnexpectedType,
 }

@@ -6,6 +6,7 @@ pub use crate::packet::{packet_error::*, packet_type::*};
 pub const MIN_PACKET_SIZE: usize = 10;
 /// The max packet size is 4096 not including the size field of 4 bytes.
 pub const MAX_PACKET_SIZE: usize = 4096 + 4;
+pub const MAX_PAYLOAD_SIZE: usize = MAX_PACKET_SIZE - MIN_PACKET_SIZE;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Packet {
@@ -18,9 +19,15 @@ pub struct Packet {
 }
 
 impl Packet {
-    pub fn new(pkt_type: PacketType, body: String, id: i32) -> Packet {
-        let size = (body.len() + MIN_PACKET_SIZE).try_into().unwrap();
-        Packet::new_raw(pkt_type, body, size, id)
+    pub fn new(pkt_type: PacketType, body: String, id: i32) -> Result<Packet, PacketError> {
+        if body.len() >= MAX_PAYLOAD_SIZE {
+            return Err(PacketError::InvalidPayloadLength);
+        }
+        let size = (body.len() + MIN_PACKET_SIZE)
+            .try_into()
+            .expect("Earlier asertion should garentee this to pass");
+
+        Ok(Packet::new_raw(pkt_type, body, size, id))
     }
 
     pub fn new_raw(pkt_type: PacketType, body: String, size: i32, id: i32) -> Packet {
@@ -84,7 +91,7 @@ mod tests {
     fn test_packet_size() {
         let body = String::from("test");
         let expected_length = body.len();
-        let pkt = Packet::new(PacketType::Auth, body, 1);
+        let pkt = Packet::new(PacketType::Auth, body, 1).unwrap();
         assert_eq!(
             pkt.size,
             i32::try_from(expected_length + MIN_PACKET_SIZE).unwrap()
@@ -93,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_auth_packet() {
-        let pkt = Vec::from(Packet::new(PacketType::Auth, String::from("password"), 0));
+        let pkt = Vec::from(Packet::new(PacketType::Auth, String::from("password"), 0).unwrap());
         // Expected output generated from packet capture using https://github.com/gorcon/rcon-cli
         let expected_bytes = [
             0x12u8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x70, 0x61,
