@@ -1,3 +1,5 @@
+//! Contians a basic struct for generatring packet IDs
+
 use crate::packet::packet_id::ID;
 
 /// A struct to generate [`ID`]s for the [`crate::RCONClient`]

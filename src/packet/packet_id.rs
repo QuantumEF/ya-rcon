@@ -1,3 +1,5 @@
+//! Contains definition for a packet ID
+
 /// This struct is about explicitly stating how the ID is handled see `from_wrapping` for more info
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord)]
 pub struct ID(i32);
