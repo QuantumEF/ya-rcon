@@ -1,6 +1,6 @@
 use std::io::{Error, Read, Write};
 
-use crate::packet::{Packet, PacketError, PacketType, MAX_PACKET_SIZE};
+use crate::packet::{packet_id::ID, Packet, PacketError, PacketType, MAX_PACKET_SIZE};
 
 // Question: Is this a bad way to convert errors?
 /// The different errors that can arise from using the client.
@@ -35,12 +35,12 @@ impl From<PacketError> for RCONError {
 
 /// The base RCON client. See the `RCONClient::new` function for info about the fields.
 #[derive(Debug)]
-pub struct RCONClient<T: Read + Write, I: Iterator<Item = u32>> {
+pub struct RCONClient<T: Read + Write, I: Iterator<Item = ID>> {
     socket: T,
     incremental_id: I,
 }
 
-impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
+impl<T: Read + Write, I: Iterator<Item = ID>> RCONClient<T, I> {
     /// Creates a new instance of the `RCONClient`.
     ///
     /// # Arguments
@@ -60,17 +60,13 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         Ok(client)
     }
 
-    fn next_id(&mut self) -> i32 {
-        i32::try_from(
-            self.incremental_id
-                .next()
-                .expect("Iterator should have been infinate, how should I handle?")
-                & 0xEFFFFFFF,
-        )
-        .expect("Bit masking did not work")
+    fn next_id(&mut self) -> ID {
+        self.incremental_id
+            .next()
+            .expect("Iterator should have been infinate, how should I handle?")
     }
 
-    fn send_packet(&mut self, pkt_type: PacketType, body: String) -> Result<i32, Error> {
+    fn send_packet(&mut self, pkt_type: PacketType, body: String) -> Result<ID, Error> {
         let id = self.next_id();
         let pkt = Vec::from(Packet::new(pkt_type, body, id)?);
         self.socket.write_all(&pkt)?;
@@ -85,11 +81,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         Ok(packet)
     }
 
-    fn recv_packet(
-        &mut self,
-        expected_type: PacketType,
-        expected_id: i32,
-    ) -> Result<String, Error> {
+    fn recv_packet(&mut self, expected_type: PacketType, expected_id: ID) -> Result<String, Error> {
         let packet = self.recv_packet_unchecked()?;
         if packet.get_id() != expected_id {
             Err(PacketError::UnexpectedID)?;
@@ -106,7 +98,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         self.wait_authentication(used_id)
     }
 
-    fn wait_authentication(&mut self, expected_id: i32) -> Result<(), RCONError> {
+    fn wait_authentication(&mut self, expected_id: ID) -> Result<(), RCONError> {
         let packet = self.recv_packet_unchecked()?;
 
         if packet.get_type() != PacketType::AuthResponse {
@@ -114,7 +106,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         }
 
         let packet_id = packet.get_id();
-        if packet_id == -1 {
+        if packet_id == (-1).into() {
             Err(RCONError::AuthenticationFailed)
         } else if expected_id == packet_id {
             Ok(())
@@ -134,6 +126,8 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
 mod tests {
     use std::{io::Error, net::TcpStream};
 
+    use crate::SimpleIDGenerator;
+
     use super::*;
 
     #[test]
@@ -143,7 +137,7 @@ mod tests {
         // Open to alternate suggestions.
         let (address, password) = include!("../rcon_server.txt");
         let stream = TcpStream::connect(address)?;
-        let mut client = RCONClient::new(stream, 0.., password.to_string())?;
+        let mut client = RCONClient::new(stream, SimpleIDGenerator::new(), password.to_string())?;
         client.authenticate(password.to_string())?;
 
         let reply = client.send_command("help".to_string())?;

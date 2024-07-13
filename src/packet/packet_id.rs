@@ -8,6 +8,10 @@ impl ID {
     pub fn from_wrapping(id: u32) -> ID {
         ID((id & 0xEFFFFFFF) as i32)
     }
+
+    pub fn to_le_bytes(self) -> [u8; 4] {
+        self.0.to_le_bytes()
+    }
 }
 
 impl From<ID> for i32 {

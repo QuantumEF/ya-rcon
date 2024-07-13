@@ -1,5 +1,13 @@
 use crate::packet::packet_id::ID;
-struct SimpleIDGenerator(u32);
+
+#[derive(Debug, Default)]
+pub struct SimpleIDGenerator(u32);
+
+impl SimpleIDGenerator {
+    pub fn new() -> SimpleIDGenerator {
+        SimpleIDGenerator::default()
+    }
+}
 
 impl Iterator for SimpleIDGenerator {
     type Item = ID;
