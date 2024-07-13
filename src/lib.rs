@@ -14,7 +14,7 @@ pub mod packet;
 /// A simple RCON client using the `TcpStream` from the standard library.
 ///
 /// # Example
-/// ```
+/// ```no_run
 /// use ya_rcon::simple_tcp_client;
 /// // You should actually handle the error in practice.
 /// let client = simple_tcp_client("127.0.0.1:27015", "password".to_string()).unwrap();
