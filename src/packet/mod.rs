@@ -3,7 +3,7 @@ pub mod packet_error;
 #[allow(missing_docs)]
 pub mod packet_type;
 
-pub use crate::packet::{packet_error::*, packet_type::*};
+pub use crate::packet::{packet_error::PacketError, packet_type::PacketType};
 
 /// The minimum packet size (in bytes) for an RCON packet.
 /// Citation: <https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Size>
