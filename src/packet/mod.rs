@@ -1,8 +1,7 @@
-#[allow(missing_docs)]
+//! Contains the implementation for [`Packet`]
+
 pub mod packet_error;
-#[allow(missing_docs)]
 pub mod packet_id;
-#[allow(missing_docs)]
 pub mod packet_type;
 
 use packet_id::ID;

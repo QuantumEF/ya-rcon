@@ -1,3 +1,5 @@
+//! Contains the implementation for [`RCONClient`]
+
 use std::io::{Error, Read, Write};
 
 use crate::packet::{packet_id::ID, Packet, PacketError, PacketType, MAX_PACKET_SIZE};

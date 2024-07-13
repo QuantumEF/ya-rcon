@@ -1,3 +1,5 @@
+//! Contains the implementation for [`PacketError`]
+
 use std::{io::Error, string::FromUtf8Error};
 
 /// The errors that can happen when working with a [`crate::Packet`]

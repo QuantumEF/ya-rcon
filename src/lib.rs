@@ -8,11 +8,8 @@ pub use client::RCONClient;
 pub use id_generator::SimpleIDGenerator;
 pub use packet::Packet;
 
-#[allow(missing_docs)]
 pub mod client;
-#[allow(missing_docs)]
 pub mod id_generator;
-#[allow(missing_docs)]
 pub mod packet;
 
 /// A simple RCON client using the [`TcpStream`] from the standard library.
