@@ -1,6 +1,6 @@
-#[allow(missing_docs)]
+//! Contains the implementation for [`Packet`]
+
 pub mod packet_error;
-#[allow(missing_docs)]
 pub mod packet_type;
 
 pub use crate::packet::{packet_error::PacketError, packet_type::PacketType};

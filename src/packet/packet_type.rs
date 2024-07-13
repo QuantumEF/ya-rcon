@@ -1,11 +1,17 @@
-/// See <https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type> for info about the types.
+//! Contains the implementation for [`PacketType`]
+
+/// See <https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type> for more info about the types.
+/// The documentation for most of the types was taken directly from there.
 /// I have done this a little weirdly since the underlying value changed depending on context.
 #[derive(Debug, Clone, Copy)]
-#[allow(missing_docs)]
 pub enum PacketType {
+    /// [SERVERDATA_RESPONSE_VALUE](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#SERVERDATA_RESPONSE_VALUE): Server response to an [`PacketType::ExecCommand`]
     ResponseValue,
+    /// [SERVERDATA_EXECCOMMAND](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#SERVERDATA_EXECCOMMAND): Packet containing the command sent from the client to the server.
     ExecCommand,
+    /// [SERVERDATA_AUTH_RESPONSE](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#SERVERDATA_AUTH_RESPONSE): Part of the server response indicating if the authentication was sucessfull.
     AuthResponse,
+    /// [SERVERDATA_AUTH](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#SERVERDATA_AUTH): Usually the first packet sent from client to server. Contains the password.
     Auth,
     /// Since both [`PacketType::ExecCommand`] and [`PacketType::AuthResponse`] are the value of 2, it depends on context what it is. Can probably just replace this with `PacketType::Raw(2)`
     ExecOrAuthResp,
