@@ -4,12 +4,12 @@ use crate::packet::{Packet, PacketError, PacketType, MAX_PACKET_SIZE};
 
 // Question: Is this a bad way to convert errors?
 /// The different errors that can arise from using the client.
-/// I am not sure if the way I wrap the `SocketError` and `PacketError` is bad practice, but this is what I have for now.
+/// I am not sure if the way I wrap [`Error`] and [`PacketError`] is bad practice, but this is what I have for now.
 #[derive(Debug)]
 pub enum RCONError {
-    /// This is an error return from whatever item was passed in as the "socket" option when creating a client: e.g. `TcpStream`
+    /// This is an error return from whatever item was passed in as the "socket" option when creating a client: e.g. [`std::net::TcpStream`]
     SocketError(Error),
-    /// This wraps any error returned from the `Packet` module. See `PacketError` for more info about the associated value contained in this type.
+    /// This wraps any error returned from the [`Packet`] module. See [`PacketError`] for more info about the associated value contained in this type.
     PacketError(PacketError),
     /// The RCON server response indicated that the password was wrong.
     AuthenticationFailed,
@@ -33,7 +33,7 @@ impl From<PacketError> for RCONError {
     }
 }
 
-/// The base RCON client. See the `RCONClient::new` function for info about the fields.
+/// The base RCON client. See the [`RCONClient::new()`] function for info about the fields.
 #[derive(Debug)]
 pub struct RCONClient<T: Read + Write, I: Iterator<Item = u32>> {
     socket: T,
@@ -41,10 +41,10 @@ pub struct RCONClient<T: Read + Write, I: Iterator<Item = u32>> {
 }
 
 impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
-    /// Creates a new instance of the `RCONClient`.
+    /// Creates a new instance of the [`RCONClient`].
     ///
     /// # Arguments
-    /// * `socket` - Any type that implements the `Read` and `Write` traits. This will usually be a `TcpStream` or similar, it could also be something like `websocket::client::sync::Client` (with some additional wrapping) if a game does things differently.
+    /// * `socket` - Any type that implements the [`Read`] and [`Write`] traits. This will usually be a [`std::net::TcpStream`] or similar, it could also be something like `websocket::client::sync::Client` (with some additional wrapping) if a game does things differently.
     /// * `id_generator` - Some iterator that yields u32, this is to fill the "ID" field of the packet. I reccomend simply using `0_u32..`
     /// * `password` - The password used to authenticate with the server.
     pub fn new(
@@ -100,7 +100,7 @@ impl<T: Read + Write, I: Iterator<Item = u32>> RCONClient<T, I> {
         Ok(packet.get_body())
     }
 
-    /// When `new()` is called this method will also be called, but it is exposed separatly in case it is desired. Not sure why it would be.
+    /// When [`RCONClient::new()`] is called this method will also be called, but it is exposed separatly in case it is desired. Not sure why it would be.
     pub fn authenticate(&mut self, password: String) -> Result<(), RCONError> {
         let used_id = self.send_packet(PacketType::Auth, password)?;
         self.wait_authentication(used_id)
