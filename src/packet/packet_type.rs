@@ -7,9 +7,9 @@ pub enum PacketType {
     ExecCommand,
     AuthResponse,
     Auth,
-    /// Since both `ExecCommand` and `AuthResponse` are the value of 2, it depends on context what it is. Can probably just replace this with `PacketType::Raw(2)`
+    /// Since both [`PacketType::ExecCommand`] and [`PacketType::AuthResponse`] are the value of 2, it depends on context what it is. Can probably just replace this with `PacketType::Raw(2)`
     ExecOrAuthResp,
-    /// A raw version of the packet type used since `PacketType::AuthResponse` and `PacketType::ExecCommand` have the same value.
+    /// A raw version of the packet type used since [`PacketType::AuthResponse`] and [`PacketType::ExecCommand`] have the same value.
     Raw(i32),
 }
 

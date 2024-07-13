@@ -61,7 +61,7 @@ impl Packet {
         self.body.clone()
     }
 
-    /// Gets the `PacketType` of the packet.
+    /// Gets the [`PacketType`] of the packet.
     pub fn get_type(&self) -> PacketType {
         self.pkt_type
     }
