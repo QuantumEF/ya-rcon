@@ -1,16 +1,22 @@
+#[allow(missing_docs)]
 pub mod packet_error;
+#[allow(missing_docs)]
 pub mod packet_type;
 
 pub use crate::packet::{packet_error::*, packet_type::*};
 
+/// The minimum packet size (in bytes) for an RCON packet.
+/// Citation: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Size
 pub const MIN_PACKET_SIZE: usize = 10;
 /// The max packet size is 4096 not including the size field of 4 bytes.
 pub const MAX_PACKET_SIZE: usize = 4096 + 4;
+/// The max size (in bytes) of a payload that can be sent.
 pub const MAX_PAYLOAD_SIZE: usize = MAX_PACKET_SIZE - MIN_PACKET_SIZE;
 
+/// Used to construct a RCON packet.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Packet {
-    ///The packet size field is a 32-bit little endian integer, representing the length of the request in bytes. Note that the packet size field itself is not included when determining the size of the packet, so the value of this field is always 4 less than the packet's actual length. The minimum possible value for packet size is 10:
+    /// The packet size field is a 32-bit little endian integer, representing the length of the request in bytes. Note that the packet size field itself is not included when determining the size of the packet, so the value of this field is always 4 less than the packet's actual length. The minimum possible value for packet size is 10:
     size: i32,
     /// The packet id field is a 32-bit little endian integer chosen by the client for each request. It may be set to any positive integer. When the server responds to the request, the response packet will have the same packet id as the original request (unless it is a failed SERVERDATA_AUTH_RESPONSE packet - see below.) It need not be unique, but if a unique packet id is assigned, it can be used to match incoming responses to their corresponding requests.
     id: i32,
@@ -19,6 +25,7 @@ pub struct Packet {
 }
 
 impl Packet {
+    /// Creates a new packet with the given parameters, checks the body/payload length and calculates the size field of the packet.
     pub fn new(pkt_type: PacketType, body: String, id: i32) -> Result<Packet, PacketError> {
         if body.len() >= MAX_PAYLOAD_SIZE {
             return Err(PacketError::InvalidPayloadLength);
@@ -30,6 +37,7 @@ impl Packet {
         Ok(Packet::new_raw(pkt_type, body, size, id))
     }
 
+    /// Creates a new packet with the given parameters but with no checks, Allows creating for an invalid packet.
     pub fn new_raw(pkt_type: PacketType, body: String, size: i32, id: i32) -> Packet {
         Packet {
             size,
@@ -39,14 +47,17 @@ impl Packet {
         }
     }
 
+    /// Gets the ID of the packet.
     pub fn get_id(&self) -> i32 {
         self.id
     }
 
+    /// Gets the packet body and performs a `clone()` to return it.
     pub fn get_body(&self) -> String {
         self.body.clone()
     }
 
+    /// Gets the `PacketType` of the packet.
     pub fn get_type(&self) -> PacketType {
         self.pkt_type
     }

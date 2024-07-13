@@ -1,12 +1,15 @@
-/// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type
+/// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type for info about the types.
+/// I have done this a little weirdly since the underlying value changed depending on context.
 #[derive(Debug, Clone, Copy)]
+#[allow(missing_docs)]
 pub enum PacketType {
     ResponseValue,
     ExecCommand,
     AuthResponse,
     Auth,
-    /// Since both `ExecCommand` and `AuthResponse` are the value of 2, it depends on context what it is.
+    /// Since both `ExecCommand` and `AuthResponse` are the value of 2, it depends on context what it is. Can probably just replace this with `PacketType::Raw(2)`
     ExecOrAuthResp,
+    /// A raw version of the packet type used since `PacketType::AuthResponse` and `PacketType::ExecCommand` have the same value.
     Raw(i32),
 }
 
