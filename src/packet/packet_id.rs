@@ -4,9 +4,9 @@ pub struct ID(i32);
 
 impl ID {
     /// Valid IDs are positive integers, but it can take on negative values when the server wants to indicate an error.
-    /// This takes u32 to ensure the value is possitive and wraps it simple by using `id as i32`
+    /// This takes u32 to ensure the value is possitive and wraps it simply by using bitmasking
     pub fn from_wrapping(id: u32) -> ID {
-        ID(id as i32)
+        ID((id & 0xEFFFFFFF) as i32)
     }
 }
 
