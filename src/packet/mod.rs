@@ -74,7 +74,7 @@ impl From<Packet> for Vec<u8> {
             usize::try_from(val.size).expect("Invalid packet size") + MIN_PACKET_SIZE + 2,
         );
         output_vec.extend(val.size.to_le_bytes());
-        output_vec.extend(val.id.to_le_bytes());
+        output_vec.extend(i32::from(val.id).to_le_bytes());
         output_vec.extend(i32::from(val.pkt_type).to_le_bytes());
         output_vec.extend(val.body.as_bytes());
         output_vec.extend([0u8, 0]);
