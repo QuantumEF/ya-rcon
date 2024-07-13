@@ -1,9 +1,11 @@
 use crate::packet::packet_id::ID;
 
+/// A struct to generate [`ID`]s for the [`crate::RCONClient`]
 #[derive(Debug, Default)]
 pub struct SimpleIDGenerator(u32);
 
 impl SimpleIDGenerator {
+    /// Creates a new instance of the struct. Same as calling [`SimpleIDGenerator::default()`]
     pub fn new() -> SimpleIDGenerator {
         SimpleIDGenerator::default()
     }
