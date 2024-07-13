@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![warn(rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 use std::net::TcpStream;

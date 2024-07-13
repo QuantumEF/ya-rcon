@@ -1,4 +1,4 @@
-/// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type for info about the types.
+/// See <https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Type> for info about the types.
 /// I have done this a little weirdly since the underlying value changed depending on context.
 #[derive(Debug, Clone, Copy)]
 #[allow(missing_docs)]

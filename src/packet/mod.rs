@@ -6,7 +6,7 @@ pub mod packet_type;
 pub use crate::packet::{packet_error::*, packet_type::*};
 
 /// The minimum packet size (in bytes) for an RCON packet.
-/// Citation: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Size
+/// Citation: <https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Packet_Size>
 pub const MIN_PACKET_SIZE: usize = 10;
 /// The max packet size is 4096 not including the size field of 4 bytes.
 pub const MAX_PACKET_SIZE: usize = 4096 + 4;
