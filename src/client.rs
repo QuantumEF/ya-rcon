@@ -1,39 +1,8 @@
 //! Contains the implementation for [`RCONClient`]
 
-use std::io::{Error, Read, Write};
+use std::io::{Error, ErrorKind, Read, Write};
 
 use crate::packet::{packet_id::ID, Packet, PacketError, PacketType, MAX_PACKET_SIZE};
-
-// Question: Is this a bad way to convert errors?
-/// The different errors that can arise from using the client.
-/// I am not sure if the way I wrap [`Error`] and [`PacketError`] is bad practice, but this is what I have for now.
-#[derive(Debug)]
-pub enum RCONError {
-    /// This is an error return from whatever item was passed in as the "socket" option when creating a client: e.g. [`std::net::TcpStream`]
-    SocketError(Error),
-    /// This wraps any error returned from the [`Packet`] module. See [`PacketError`] for more info about the associated value contained in this type.
-    PacketError(PacketError),
-    /// The RCON server response indicated that the password was wrong.
-    AuthenticationFailed,
-}
-
-impl From<RCONError> for Error {
-    fn from(value: RCONError) -> Self {
-        Error::other(format!("{:?}", value))
-    }
-}
-
-impl From<Error> for RCONError {
-    fn from(value: Error) -> Self {
-        RCONError::SocketError(value)
-    }
-}
-
-impl From<PacketError> for RCONError {
-    fn from(value: PacketError) -> Self {
-        RCONError::PacketError(value)
-    }
-}
 
 /// The base RCON client. See the [`RCONClient::new()`] function for info about the fields.
 #[derive(Debug)]
@@ -49,11 +18,7 @@ impl<T: Read + Write, I: Iterator<Item = ID>> RCONClient<T, I> {
     /// * `socket` - Any type that implements the [`Read`] and [`Write`] traits. This will usually be a [`std::net::TcpStream`] or similar, it could also be something like `websocket::client::sync::Client` (with some additional wrapping) if a game does things differently.
     /// * `id_generator` - Some iterator that yields u32, this is to fill the "ID" field of the packet. I reccomend simply using `0_u32..`
     /// * `password` - The password used to authenticate with the server.
-    pub fn new(
-        socket: T,
-        id_generator: I,
-        password: String,
-    ) -> Result<RCONClient<T, I>, RCONError> {
+    pub fn new(socket: T, id_generator: I, password: String) -> Result<RCONClient<T, I>, Error> {
         let mut client = RCONClient {
             socket,
             incremental_id: id_generator,
@@ -95,25 +60,28 @@ impl<T: Read + Write, I: Iterator<Item = ID>> RCONClient<T, I> {
     }
 
     /// When [`RCONClient::new()`] is called this method will also be called, but it is exposed separatly in case it is desired. Not sure why it would be.
-    pub fn authenticate(&mut self, password: String) -> Result<(), RCONError> {
+    pub fn authenticate(&mut self, password: String) -> Result<(), Error> {
         let used_id = self.send_packet(PacketType::Auth, password)?;
         self.wait_authentication(used_id)
     }
 
-    fn wait_authentication(&mut self, expected_id: ID) -> Result<(), RCONError> {
+    fn wait_authentication(&mut self, expected_id: ID) -> Result<(), Error> {
         let packet = self.recv_packet_unchecked()?;
 
         if packet.get_type() != PacketType::AuthResponse {
-            return Err(RCONError::PacketError(PacketError::UnexpectedType));
+            return Err(PacketError::UnexpectedType.into());
         }
 
         let packet_id = packet.get_id();
         if packet_id == (-1).into() {
-            Err(RCONError::AuthenticationFailed)
+            Err(Error::new(
+                ErrorKind::PermissionDenied,
+                "Authentication with the RCONserver failed.",
+            ))
         } else if expected_id == packet_id {
             Ok(())
         } else {
-            Err(RCONError::PacketError(PacketError::UnexpectedID))
+            Err(PacketError::UnexpectedID.into())
         }
     }
 

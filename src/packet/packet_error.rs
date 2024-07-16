@@ -1,6 +1,9 @@
 //! Contains the implementation for [`PacketError`]
 
-use std::{io::Error, string::FromUtf8Error};
+use std::{
+    io::{Error, ErrorKind},
+    string::FromUtf8Error,
+};
 
 /// The errors that can happen when working with a [`crate::Packet`]
 #[derive(Debug, Clone, Copy)]
@@ -26,7 +29,23 @@ impl From<FromUtf8Error> for PacketError {
 }
 
 impl From<PacketError> for Error {
-    fn from(value: PacketError) -> Self {
-        Error::other(format!("{:?}", value))
+    fn from(error: PacketError) -> Error {
+        match error {
+            PacketError::ParseError => {
+                Error::new(ErrorKind::InvalidData, "RCON packet parse error")
+            }
+            PacketError::InvalidPacketBody => {
+                Error::new(ErrorKind::InvalidData, "Invalid RCON packet body")
+            }
+            PacketError::InvalidPayloadLength => {
+                Error::new(ErrorKind::InvalidInput, "Invalid RCON payload length")
+            }
+            PacketError::UnexpectedID => {
+                Error::new(ErrorKind::InvalidData, "Unexpected ID for RCON packet")
+            }
+            PacketError::UnexpectedType => {
+                Error::new(ErrorKind::InvalidData, "Unexpected type for RCON packet")
+            }
+        }
     }
 }
