@@ -16,7 +16,7 @@ impl<T: Read + Write, I: Iterator<Item = ID>> RCONClient<T, I> {
     ///
     /// # Arguments
     /// * `socket` - Any type that implements the [`Read`] and [`Write`] traits. This will usually be a [`std::net::TcpStream`] or similar, it could also be something like `websocket::client::sync::Client` (with some additional wrapping) if a game does things differently.
-    /// * `id_generator` - Some iterator that yields u32, this is to fill the "ID" field of the packet. I reccomend simply using `0_u32..`
+    /// * `id_generator` - Some iterator that yields [`ID`], this is to fill the "ID" field of the packet. I reccomend simply using `0_u32..`
     /// * `password` - The password used to authenticate with the server.
     pub fn new(socket: T, id_generator: I, password: String) -> Result<RCONClient<T, I>, Error> {
         let mut client = RCONClient {
