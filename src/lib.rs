@@ -9,7 +9,7 @@ pub use id_generator::SimpleIDGenerator;
 pub use packet::Packet;
 
 pub mod client;
-#[cfg(feature = "tokio")]
+#[cfg(any(feature = "tokio", feature = "async-net"))]
 pub mod client_async;
 pub mod id_generator;
 pub mod packet;

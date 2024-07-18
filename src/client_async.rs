@@ -114,7 +114,7 @@ mod tests {
         // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
         // Open to alternate suggestions.
         let (address, password) = include!("../rcon_server.txt");
-        let stream = tokio::net::TcpStream::connect(address).await.unwrap();
+        let stream = async_net::TcpStream::connect(address).await.unwrap();
         let mut client =
             AsyncRCONClient::new(stream, SimpleIDGenerator::new(), password.to_string())
                 .await
