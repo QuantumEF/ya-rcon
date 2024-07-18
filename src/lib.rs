@@ -26,5 +26,5 @@ pub fn simple_tcp_client(
 ) -> std::result::Result<client::RCONClient<std::net::TcpStream, SimpleIDGenerator>, std::io::Error>
 {
     let stream = TcpStream::connect(addr)?;
-    Ok(RCONClient::new(stream, SimpleIDGenerator::new(), password)?)
+    RCONClient::new(stream, SimpleIDGenerator::new(), password)
 }
