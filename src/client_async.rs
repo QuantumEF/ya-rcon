@@ -1,8 +1,10 @@
 //! Contains the implementation for [`RCONClient`]
 #[cfg(feature = "async-net")]
+#[cfg(not(feature = "tokio"))]
 use futures::{AsyncReadExt, AsyncWriteExt};
 use std::io::{Error, ErrorKind};
 #[cfg(feature = "tokio")]
+#[cfg(not(feature = "async-net"))]
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::packet::{packet_id::ID, Packet, PacketError, PacketType, MAX_PACKET_SIZE};
@@ -108,13 +110,20 @@ mod tests {
     use super::*;
     use crate::SimpleIDGenerator;
 
+    #[cfg(feature = "async-net")]
+    #[cfg(not(feature = "tokio"))]
+    use async_net::TcpStream;
+    #[cfg(feature = "tokio")]
+    #[cfg(not(feature = "async-net"))]
+    use tokio::net::TcpStream;
+
     #[tokio_macros::test]
     #[ignore = "Requires RCON Server"]
     async fn basic_rcon_client_test() {
         // Look at the example_rcon_server.txt file as an example for your rcon_server.txt file.
         // Open to alternate suggestions.
         let (address, password) = include!("../rcon_server.txt");
-        let stream = async_net::TcpStream::connect(address).await.unwrap();
+        let stream = TcpStream::connect(address).await.unwrap();
         let mut client =
             AsyncRCONClient::new(stream, SimpleIDGenerator::new(), password.to_string())
                 .await
