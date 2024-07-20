@@ -5,8 +5,9 @@ This project is a rust implementation of the RCON protocol commonly used for gam
 ## Feature overview
 
 *   [x] Synchronous RCON API for sending commands and recieving a corresponding response.
-*   [ ] Async functionality switch with [maybe-async](https://docs.rs/maybe-async/latest/maybe_async/)
-    * [ ] Wrap "tokio" and "async_net" AsyncWrite Traits for crate one
+*   [x] Async functionality switch with ~~[maybe-async](https://docs.rs/maybe-async/latest/maybe_async/)~~
+    * [x] tokio's AsyncReadExt and AsyncWriteExt traits gated by the tokio feature
+    * [x] futures AsyncReadExt and AsyncWriteExt trait gated with the async-net feature
 *   [ ] Contribution guide.
 *   [ ] Docker containers for being able to test compatibility with various games.
 *   [ ] Organization guide for addision of game specific abstractions gated with "features"
@@ -55,9 +56,7 @@ Pull requests are welcome. You should open an issue first to discuss what you wo
 [MIT](https://choosealicense.com/licenses/mit/)
 
 # Another TODO (Mainly for myself since it is more haphazard and specific to communicating with myself.)
-- Need revamp for general error handling.
 - HashMap for handling ["fragmented" packets](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses)? 
-- tokio and async_net features.
 - creates.io and documentation
     - Creation of docker container to test rcon with specific game (and document how to so other can do so.)
 - organization / investigation to determine game specific features for higher level abstractions.
